@@ -46,6 +46,15 @@ def getFrequentPairs(hashtable,baskets):
     for k in hashtable:
       #-------TODO : REPLACE 4 BY SUPPORT COUNT-------------
       if hashtable[k]>4:
+         for basket in baskets:
+            for subset in itertools.combinations(basket, 2):
+              key = (ord(subset[0])+ord(subset[1]))%20
+              if key==k:
+                candidatepairs.add(subset);
+
+      print candidatepairs
+
+
         
 
 
@@ -69,6 +78,7 @@ if __name__ == '__main__':
     #generating item counts table
     itemcounttable = generateItemCountsTable(d)    
     hashtable = buildHashTable(d)
+    getFrequentPairs(hashtable,d)
     
 
 
