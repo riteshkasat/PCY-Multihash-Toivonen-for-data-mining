@@ -1,8 +1,8 @@
 import itertools
 import sys
 from itertools import combinations
-numberOfBuckets = 8
-support = 2
+numberOfBuckets = 20
+support = 4
 
 #takes :  single itemset. For ex [a,b,c]
 #return : bucket to which the itemset is hashed
@@ -12,42 +12,96 @@ def generateHash(singleItemset):
 		total+=ord(item)
 	return total%numberOfBuckets
 
-#takes : list of itemset of same size. For ex [[a,b], [a,d], [b,c]]. Here size = 2
-#returns : hashtable with  0<=bucketKey<numberOfBuckets 
-def generateHashTable(listOfItemSet):
-	hashTable = {}
-	for itemSet in listOfItemSet:
-		hashKey = generateHash(itemSet)
-		hashTable.setdefault(hashKey,0)
-		hashTable[hashKey] += 1
-	return hashTable
 
-#takes :  hashTable. Can be for pairs, triplets etc. But only one of them at a given time.
-#return : bucket to which the itemset is hashed
 def generateBitMap(hashTable):
 	bitmap = 0
+	print ("hashtable in bitmap", hashTable)
 	print  "{0:b}".format(bitmap)
 	for k,v in hashTable.iteritems():
-		if v >= support:
-			bitmap = bitmap | 1<<int(k)
-			print ("key="+str(k),"support="+str(v),"{0:b}".format(bitmap))
+		#print ("v="+str(v),"support="+str(support),"type of v=",type(v),"type of support=",type(support))
+		
 
+		if v >= int(support):
+			
+			bitmap = bitmap | 1<<int(k)
+			#print ("key="+str(k),"support="+str(v),"{0:b}".format(bitmap))
+
+	print ("bitmap",bitmap);
 	return bitmap
 
+#takes : list of baskets. For ex: [['a','d'],['f','g']]
+#return : hashTable
+def generateHashTable(baskets, size):
+	hashTable={}
+	for line in baskets:
+		subsets = []
+		for subset in itertools.combinations(line, size):
+	 		subsets.append(subset)
+		
+		for ele in subsets:
+			hashKey = generateHash(ele)
+			hashTable.setdefault(hashKey,0)
+			hashTable[hashKey]+=1
+			print ("ele",ele,"hashkey=",hashKey,"hashCount=",hashTable[hashKey])	
 
-#takes : list. contains only singletons. For ex: ['a','d','f']
-#return : all combinations of given size. For ex: size=2, then output = [['a','b'],['a','f'],['d','f']]
-def generateItemCombinations(listOfSingletons, size):
-	 subsets = []
-	 listOfSingletons = sorted(listOfSingletons)
-	 for subset in itertools.combinations(listOfSingletons, size):
-	 	subsets.append(subset)
-	 return subsets
+	return hashTable
 
 
+def generateFrequentItemsets(bitmap,baskets,size,previousFrequentItemsets):
+	frequentItemsetsCandidates ={}
+	subsets = set()
+	result=[]
+	for line in baskets:
+		print ("line=",line)
+		for subset in itertools.combinations(line, size):
+	 		#print("subset",subset)
+	 		subsets.add(subset)
+
+	print ("previousFrequentItemsetsssssssssssssssssssssssss",previousFrequentItemsets)
+	#print ("subsets",subsets,"size=",size);
+	for subset in subsets:
+		
+		'''a=[]
+		for item in itertools.combinations(subset, size-1):
+	 		a.append(item)
+		'''	
+		print ("paaaaaas=",size,"subset",subset)
+		
+		count = 0
+		temp = itertools.combinations(subset, size)
+		for item in temp:  
+			if item in previousFrequentItemsets:
+				count+=1
+
+		if bitmapLookup(bitmap,list(subset)) and count==len(list(temp)):	
+			
+			frequentItemsetsCandidates.setdefault(subset,0)
+			#frequentItemsetsCandidates[subset]+=1
+
+	#print ("frequentItemsets candidates", frequentItemsetsCandidates)
+	
+	for line in baskets:
+		
+		for subset in itertools.combinations(line, size):
+			if subset in frequentItemsetsCandidates.keys():
+				
+				frequentItemsetsCandidates[subset] +=1
+
+	#print ("freqent itemset keys",frequentItemsetsCandidates.keys(),"frequency",size)
+	for k,v in frequentItemsetsCandidates.iteritems():
+		
+		print ("candidate key",k,"frequency",v)
+		if int(v)>=int(support):
+			result.append(k)
+
+	#print ("result=",sorted(result))
+	return sorted(result)
+	
 def bitmapLookup(bitmap,itemSet):
 	hashValue = 1<<int(generateHash(itemSet))
-	return True if hashValue & bitmap > 0 else False
+	#print ("hashValue=","{0:b}".format(hashValue),"bitmap=","{0:b}".format(bitmap), hashValue & bitmap > 0)
+	
+	return True if hashValue & bitmap != 0 else False
 
 
 def generateBasketsFromInput(rawdata):
@@ -59,7 +113,7 @@ def generateBasketsFromInput(rawdata):
     baskets.append(sorted(line))
   return baskets
 
-def generateItemCountsTable(baskets):
+def generateFrequentSingletons(baskets):
 	d={}
 	result=[]
 	for line in baskets:
@@ -68,7 +122,7 @@ def generateItemCountsTable(baskets):
 			d[ele]+=1
 	
 	for k,v in d.iteritems():
-		print (k,v)
+		
 		if v>=int(support):
 			result.append(k)
 
@@ -77,19 +131,29 @@ def generateItemCountsTable(baskets):
 if __name__ == '__main__':
 	
 		
-		support = sys.argv[2]
-		bucket = sys.argv[3]
+		support = int(sys.argv[2])
+		bucket = int(sys.argv[3])
 		inputfile = open(sys.argv[1])
      
     	#reading input from file
-		d = generateBasketsFromInput(inputfile)
-
-    	#generating item counts table
-		itemCountTable = generateItemCountsTable(d)     
-		print itemCountTable
+		baskets = generateBasketsFromInput(inputfile)
+		
 		size=2
+		Pass=1
+		hashTable={}
 
-		while len(itemcounttable)>0:
-			listOfAllPossibleItemSets = generateItemCombinations(itemCountTable, size)	
-			hashTable = generateHashTable(listOfAllPossibleItemSets,size)
+		while len(hashTable.keys())>0 or Pass==1:
+			if Pass ==1:
+				frequentItemsets= generateFrequentSingletons(baskets)
+			else:
+				bitmap = generateBitMap(hashTable)
 
+				previousFrequentItemsets=frequentItemsets
+				#print ("previous",previousFrequentItemsets)
+				frequentItemsets= generateFrequentItemsets(bitmap, baskets, size-1,previousFrequentItemsets)
+				
+			print ("frequent itemsets for pass=",size-1,frequentItemsets)
+			hashTable = generateHashTable(baskets, size)
+			print ("hashtable", hashTable,"pass",size)
+			Pass +=1
+			size+=1
