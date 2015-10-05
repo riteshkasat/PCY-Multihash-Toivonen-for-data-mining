@@ -103,7 +103,6 @@ if __name__ == '__main__':
 				frequentItemsets= generateFrequentItemsets(baskets,size,bitmap,previousFrequentItemsets)
 				print (frequentItemsets); print
 			
-			
 			size +=1
 			hashTable = generateHashTable(baskets, size)
 			if len(frequentItemsets)==0:
