@@ -35,25 +35,17 @@ def generateHashTable(baskets, size, prime):
 
 def generateFrequentItemsets(baskets,size,bitmap1,bitmap2,previousFrequentItemsets):
 	frequentItemsetsCandidates ={}
-	subsets = set()
 	result=[]
 	for line in baskets:
 		for subset in itertools.combinations(line, size):
-	 		subsets.add(subset)
+			count = 0
+			temp = itertools.combinations(subset, size-1)
+			for item in temp:  
+				if item in previousFrequentItemsets:
+					count+=1
 
-	for subset in subsets:
-		count = 0
-		temp = itertools.combinations(subset, size-1)
-		for item in temp:  
-			if item in previousFrequentItemsets:
-				count+=1
-
-		if bitmapLookup(bitmap1,list(subset),prime1) and bitmapLookup(bitmap2,list(subset),prime2) and count==len(list(temp)):	
-			frequentItemsetsCandidates.setdefault(subset,0)
-			
-	for line in baskets:
-		for subset in itertools.combinations(line, size):
-			if subset in frequentItemsetsCandidates.keys():
+			if bitmapLookup(bitmap1,list(subset),prime1) and bitmapLookup(bitmap2,list(subset),prime2) and count==len(list(temp)):	
+				frequentItemsetsCandidates.setdefault(subset,0)
 				frequentItemsetsCandidates[subset] +=1
 
 	for k,v in frequentItemsetsCandidates.iteritems():
